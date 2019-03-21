@@ -81,14 +81,37 @@ def get_sift_frame_kp_desc(frame):
     kp, des = sift.detectAndCompute(gray, None)
     return kp, des
 
-frames = get_video_frames('C:\Users\Shay\Documents\CSC420\Project\\test.mp4')
-frame1 = frames[0]
-frame2 = frames[1]
-kp1, des1 = get_sift_frame_kp_desc(frame1)
-kp2, des2 = get_sift_frame_kp_desc(frame2)
-des_frame1, des_frame2 = compute_descriptor_dictionaries(kp1, kp2, des1, des2)
-matches_between_frames = compute_potential_matches(des1, des2)
-kp_pairs = compute_kp_pairs(matches_between_frames, des_frame1, des_frame2, kp1, kp2)
-ref_x, ref_y = map(list,zip(*kp_pairs.keys()))
-test_x, test_y = map(list,zip(*kp_pairs.values()))
-visualize_matches(frame1, frame2, ref_x, ref_y, test_x, test_y)
+# returns a dictionary of key point matches between frames
+def compute_shared_keypoints(frame1, frame2):
+    kp1, des1 = get_sift_frame_kp_desc(frame1)
+    kp2, des2 = get_sift_frame_kp_desc(frame2)
+    des_frame1, des_frame2 = compute_descriptor_dictionaries(kp1, kp2, des1, des2)
+    matches_between_frames = compute_potential_matches(des1, des2)
+    kp_pairs = compute_kp_pairs(matches_between_frames, des_frame1, des_frame2, kp1, kp2)
+    return kp_pairs
+
+def get_shots(frames):
+    shots = {}
+    for frame_count in range(len(frames)-1):
+        frame1 = frames[frame_count]
+        frame2 = frames[frame_count+1]
+        kp_pairs = compute_shared_keypoints(frame1, frame2)
+        if len(kp_pairs) < 10:
+            print 'Threshold not met. Changed scene.'
+            shot_count = len(shots.keys())
+            if shot_count not in shots:
+                shots[shot_count] = [frame_count, frame_count+1]
+            else:
+                shots[shot_count].append(frame_count)
+                shots[shot_count].append(frame_count+1)
+    return shots
+
+video_frames = get_video_frames('C:\Users\Shay\Documents\CSC420\Project\\test.mp4')
+print get_shots(video_frames)
+
+
+#ref_x, ref_y = map(list,zip(*kp_pairs.keys()))
+#test_x, test_y = map(list,zip(*kp_pairs.values()))
+#visualize_matches(frame1, frame2, ref_x, ref_y, test_x, test_y)
+
+
