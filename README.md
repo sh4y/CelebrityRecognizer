@@ -23,10 +23,12 @@ Example:
 
 b.	Track faces by drawing a rectangle around each face
 c.	Store location of face
+
 4)	Train a classifier to detect actor faces using Microsoft dataset (MSRA-CFW: Dataset of Celebrity Faces on the Web). 
 a.	Curate dataset by cropping out non face related content (ie; only select headshots)
 b.	For ease of use purposes, remove celebrities which won’t appear in the clip
 c.	Go through curated dataset and manually remove any potential false positives (extreme costumes/makeup from other movies or out of date (wrong age) headshots)
+
 5)	Classify each detected face in movie clip as actor or not (if actor, write names)
 a.	Using previously detected faces (in step 2), run face through classifier and assign a label
 b.	Do this for every single face detected in the shot
