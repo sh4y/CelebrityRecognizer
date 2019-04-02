@@ -16,6 +16,11 @@ a.	Compare frame to the previous by computing SIFT keypoints on each frame of th
 b.	Manually annotate scenes, find where algorithm detects scene and obtain percentage of how many are correct
 3)	Detect faces in the clip. Track faces.
 a.	Use OpenCV’s HaarCascades library to detect these faces – find optimal parameters to reduce false positives
+
+Example:
+
+![Screenshot](https://i.imgur.com/0dzuBnY.png)
+
 b.	Track faces by drawing a rectangle around each face
 c.	Store location of face
 4)	Train a classifier to detect actor faces using Microsoft dataset (MSRA-CFW: Dataset of Celebrity Faces on the Web). 
