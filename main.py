@@ -110,8 +110,24 @@ video_frames = get_video_frames('C:\Users\Shay\Documents\CSC420\Project\\test.mp
 print get_shots(video_frames)
 
 
-#ref_x, ref_y = map(list,zip(*kp_pairs.keys()))
-#test_x, test_y = map(list,zip(*kp_pairs.values()))
-#visualize_matches(frame1, frame2, ref_x, ref_y, test_x, test_y)
+face_cascade = cv2.CascadeClassifier()
+
+cascade = cv2.CascadeClassifier()
+cascade.load(r'C:\Users\haksh\Documents\CSC420\PROJECT\face.xml')
+
+#face = cv2.imread(r'C:\Users\haksh\Documents\CSC420\PROJECT\avengers.jpg')
+for frame in video_frames:
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    faces = cascade.detectMultiScale(gray, 1.1, 5)
+
+    for (x,y,w,h) in faces:
+        img = cv2.rectangle(frame ,(x,y),(x+w,y+h),(255,0,0),2)
+
+    cv2.imshow('', img)
+    cv2.waitKey(0)
+
+
+
 
 
