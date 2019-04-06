@@ -2,6 +2,7 @@ import cv2 as cv2
 import numpy as np
 import operator
 import matplotlib.pyplot as plt
+import face_recognition
 
 def get_video_frames(file):
     capture = cv2.VideoCapture(file)
@@ -92,7 +93,8 @@ def compute_shared_keypoints(frame1, frame2):
 
 def get_shots(frames):
     shots = {}
-    for frame_count in range(len(frames)-1):
+    for frame_count in range(len(frames)-2):
+        print frame_count
         frame1 = frames[frame_count]
         frame2 = frames[frame_count+1]
         kp_pairs = compute_shared_keypoints(frame1, frame2)
@@ -106,28 +108,45 @@ def get_shots(frames):
                 shots[shot_count].append(frame_count+1)
     return shots
 
-video_frames = get_video_frames('C:\Users\Shay\Documents\CSC420\Project\\test.mp4')
-print get_shots(video_frames)
-
-
+print 'Opening video file'
+video_frames = get_video_frames(r'C:\Users\haksh\Documents\CSC420\PROJECT\clips\talking.mp4')
+#print(get_shots(video_frames))
+print 'Loading Classifier'
 face_cascade = cv2.CascadeClassifier()
 
 cascade = cv2.CascadeClassifier()
 cascade.load(r'C:\Users\haksh\Documents\CSC420\PROJECT\face.xml')
 
+annotated_movie = {}
+
+print 'Opening output file'
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+out = cv2.VideoWriter('output.mp4',fourcc, 20.0, (1920,1080))
+
 #face = cv2.imread(r'C:\Users\haksh\Documents\CSC420\PROJECT\avengers.jpg')
-for frame in video_frames:
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+print 'Entering loop.'
+for frame_count in range(len(video_frames)-1):
+    #print video_frames[frame_count].shape
+    gray = cv2.cvtColor(video_frames[frame_count], cv2.COLOR_BGR2GRAY)
+    #rgb = cv2.cvtColor(video_frames[frame_count], cv2.COLOR_BGR2RGB)
+    faces = cascade.detectMultiScale(gray, 1.2, 5)
+    #faces = face_recognition.face_locations(rgb)
 
-    faces = cascade.detectMultiScale(gray, 1.1, 5)
-
+    img = video_frames[frame_count]
     for (x,y,w,h) in faces:
-        img = cv2.rectangle(frame ,(x,y),(x+w,y+h),(255,0,0),2)
+        img = cv2.rectangle(video_frames[frame_count],(x,y),(x+w,y+h),(255,0,0),2)
 
-    cv2.imshow('', img)
-    cv2.waitKey(0)
+    annotated_movie[frame_count] = img
+
+    out.write(img)
+    if frame_count == 900:
+        break;
+
+out.release()
 
 
-
+#ref_x, ref_y = map(list,zip(*kp_pairs.keys()))
+#test_x, test_y = map(list,zip(*kp_pairs.values()))
+#visualize_matches(frame1, frame2, ref_x, ref_y, test_x, test_y)
 
 
