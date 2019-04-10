@@ -7,6 +7,8 @@ from skimage import io
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.utils.data.Dataset as Dataset
+
 import torchvision
 import torchvision.transforms as transforms
 
@@ -45,15 +47,62 @@ for actor in actors:
 print("Gather " + str(len(features)) + " amount of features.")
 
 
-#torch.nn.Conv2d(1, 1, kernel_size, stride, padding)
+class FaceLandmarksDataset(Dataset):
+    """Face Landmarks dataset."""
 
-import torch.nn as nn
+    def __init__(self, csv_file, root_dir, transform=None):
+        """
+        Args:
+            csv_file (string): Path to the csv file with annotations.
+            root_dir (string): Directory with all the images.
+            transform (callable, optional): Optional transform to be applied
+                on a sample.
+        """
+        self.landmarks_frame = pd.read_csv(csv_file)
+        self.root_dir = root_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.landmarks_frame)
+
+    def __getitem__(self, idx):
+        img_name = os.path.join(self.root_dir,
+                                self.landmarks_frame.iloc[idx, 0])
+        image = io.imread(img_name)
+        landmarks = self.landmarks_frame.iloc[idx, 1:].as_matrix()
+        landmarks = landmarks.astype('float').reshape(-1, 2)
+        sample = {'image': image, 'landmarks': landmarks}
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
 
 
+class MyCustomDataset(Dataset):
+    def __init__(self, data_features, data_targets, transforms=None):
+        # stuff
+        self.features = data_features
+        self.targets = data_targets
+        self.transforms = transforms  # Use rescale transformation maybe?
 
-input_size = (3, 1)
-hidden_size = ()
-output_size = ()
+    def __getitem__(self, index):
+        # stuff
+        image = self.features[index]
+        label = self.targets[index]
+        #
+        # if self.transforms is not None:
+        #     data = self.transforms(data)
+        # If the transform variable is not empty
+        # then it applies the operations in the transforms with the order that it is created.
+
+        return np.ndarray(image, label)
+
+    def __len__(self):
+        return len(self.features)  # of how many data(images?) you have
+
+
+custom_dataset = MyCustomDataset(features, targets)
 
 
 class RNN(nn.Module):
@@ -80,5 +129,7 @@ class RNN(nn.Module):
 
 n_hidden = 10
 rnn = RNN(3, n_hidden, 3)
+
+
 
 
