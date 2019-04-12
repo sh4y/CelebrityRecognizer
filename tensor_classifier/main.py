@@ -1,15 +1,11 @@
 import cv2 as cv2
-import os
 import numpy as np
 import operator
 import matplotlib.pyplot as plt
 import face_recognition
 
-from subprocess import call, Popen, PIPE
+from tensor_classifier.classify import *
 
-#from tensor_classifier.classify import classify_face
-
-print("PATH of main.py is: " + str(os.environ['PYTHONPATH']))
 
 def get_video_frames(file):
     capture = cv2.VideoCapture(file)
@@ -108,12 +104,12 @@ def compute_shared_keypoints(frame1, frame2):
 def get_shots(frames):
     shots = {}
     for frame_count in range(len(frames)-2):
-        print (frame_count)
+        print frame_count
         frame1 = frames[frame_count]
         frame2 = frames[frame_count+1]
         kp_pairs = compute_shared_keypoints(frame1, frame2)
         if len(kp_pairs) < 10:
-            print ('Threshold not met. Changed scene.')
+            print 'Threshold not met. Changed scene.'
             shot_count = len(shots.keys())
             if shot_count not in shots:
                 shots[shot_count] = [frame_count, frame_count+1]
@@ -122,10 +118,10 @@ def get_shots(frames):
                 shots[shot_count].append(frame_count+1)
     return shots
 
-print ('Opening video file')
+print 'Opening video file'
 video_frames = get_video_frames('./avengers_hangar_scene.mp4')
 #print(get_shots(video_frames))
-print ('Loading Classifier')
+print 'Loading Classifier'
 face_cascade = cv2.CascadeClassifier()
 
 cascade = cv2.CascadeClassifier()
@@ -133,12 +129,12 @@ cascade = cv2.CascadeClassifier()
 
 annotated_movie = {}
 
-print ('Opening output file')
+print 'Opening output file'
 fourcc = cv2.VideoWriter_fourcc(*'MPEG')
 out = cv2.VideoWriter('output.mp4',fourcc, 20.0, (1280,720))
 
 #face = cv2.imread(r'C:\Users\haksh\Documents\CSC420\PROJECT\avengers.jpg')
-print ('Entering loop.')
+print 'Entering loop.'
 for frame_count in range(len(video_frames)-1):
     #print video_frames[frame_count].shape
     #gray = cv2.cvtColor(video_frames[frame_count], cv2.COLOR_BGR2GRAY)
@@ -151,20 +147,8 @@ for frame_count in range(len(video_frames)-1):
         top, right, bottom, left = face_location
         img = cv2.rectangle(video_frames[frame_count], (left, top), (right, bottom), (255,0,0), 2)
         face = video_frames[frame_count][top:bottom,left:right]
-        cv2.imwrite('temp.jpg', face)
-
-        p = Popen(['python3.7', 'classify.py', 'temp.jpg'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        #output= subprocess.check_output("grep 'hello' tmp", shell=True)
-        output = p.stderr.read()
-        print(output)
-
-        #print("return code: " + str(rc))
-        #print("output: " + str(output))
-        #print("------------------")
-        #name = os.system('python3.7 ./classify.py temp.jpg')
-
-        os.remove('temp.jpg')
-        # print(name)
+        #cropped_faces.append(face)
+        os.system('')
 
 
     annotated_movie[frame_count] = img
