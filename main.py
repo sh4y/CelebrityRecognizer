@@ -5,7 +5,8 @@ import operator
 import matplotlib.pyplot as plt
 import face_recognition
 
-from subprocess import call, Popen, PIPE
+import subprocess
+# from subprocess import call, Popen, PIPE
 
 #from tensor_classifier.classify import classify_face
 
@@ -148,15 +149,34 @@ for frame_count in range(len(video_frames)-1):
 
     img = video_frames[frame_count]
     for face_location in faces:
+        print("\tLocated face on Frame " + str(frame_count))
         top, right, bottom, left = face_location
         img = cv2.rectangle(video_frames[frame_count], (left, top), (right, bottom), (255,0,0), 2)
-        face = video_frames[frame_count][top:bottom,left:right]
+        face = video_frames[frame_count][top:bottom, left:right]
+
         cv2.imwrite('temp.jpg', face)
 
-        p = Popen(['python3.7', 'classify.py', 'temp.jpg'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        print("\tRunning Command")
+        p = subprocess.Popen(['/Users/Bipen/anaconda3/bin/python classify.py temp.jpg'], stdout=subprocess.PIPE, shell=True)
+        stdout, stderr = p.communicate()
+        value = p.returncode
+
+        # p.wait()
         #output= subprocess.check_output("grep 'hello' tmp", shell=True)
-        output = p.stderr.read()
-        print(output)
+        print("\tSTDOUT: ")
+        print("\t" + stdout)
+
+        result = stdout.split("\n")[-2]
+
+        cv2.imshow("[Frame " + str(frame_count) + "] " + result, face)
+        cv2.waitKey(5000)
+        #print p.stdout.read()
+        # print("\tSTDERR: ")
+        # print(stderr)
+        # print("\tRETURN VALUE: ")
+        # print(value)
+        #output = p.stderr.read()
+        #print(output)
 
         #print("return code: " + str(rc))
         #print("output: " + str(output))
@@ -165,7 +185,6 @@ for frame_count in range(len(video_frames)-1):
 
         os.remove('temp.jpg')
         # print(name)
-
 
     annotated_movie[frame_count] = img
 
