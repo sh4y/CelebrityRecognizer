@@ -6,11 +6,7 @@ import matplotlib.pyplot as plt
 import face_recognition
 
 import subprocess
-# from subprocess import call, Popen, PIPE
 
-#from tensor_classifier.classify import classify_face
-
-print("PATH of main.py is: " + str(os.environ['PYTHONPATH']))
 
 def get_video_frames(file):
     capture = cv2.VideoCapture(file)
@@ -39,22 +35,15 @@ def compute_descriptor_dictionaries(kp_frame1, kp_frame2, des_frame1, des_frame2
 def compute_potential_matches(des_ref, des_test):
     potential_matches = {}
     for descriptor in des_ref:
-        #print '==============='
         distances = {}
         for pair in des_test:
             dist = np.linalg.norm(descriptor-pair)
             distances[tuple(pair)] = dist
-            #distances.update({tuple(pair): dist})
         distances = sorted(distances.items(), key=operator.itemgetter(1))
         major_distance = distances[0][1]
-        #print 'major: ' + str(major_distance)
         minor_distance = distances[1][1]
-        #print 'minor: ' + str(minor_distance)
         ratio = major_distance / minor_distance
-        #print ratio
         if ratio < 0.7:
-            #append to potential matches
-            #print 'Appending to pot match'
             if tuple(descriptor) not in potential_matches:
                 potential_matches[tuple(descriptor)] = distances[0][0]
     return potential_matches
@@ -123,83 +112,71 @@ def get_shots(frames):
                 shots[shot_count].append(frame_count+1)
     return shots
 
+
 print ('Opening video file')
-video_frames = get_video_frames('./avengers_hangar_scene.mp4')
-#print(get_shots(video_frames))
+scene_name = 'avengers_discussion'
+video_frames = get_video_frames('./'+scene_name+'.mp4')
+print("Getting Shots...")
+
+shots = get_shots(video_frames)
+print(shots)
+
+for shot in shots:
+    print("Shot Number " + str(shot))
+    print("Transition at Frames " + str(shots[shot][0]) + " & " + str(shots[shot][1]))
+    cv2.imshow("Frame " + str(shots[shot][0]),video_frames[shots[shot][0]])
+    cv2.imshow("Frame " + str(shots[shot][1]), video_frames[shots[shot][1]])
+    cv2.waitKey(0)
+
 print ('Loading Classifier')
 face_cascade = cv2.CascadeClassifier()
 
 cascade = cv2.CascadeClassifier()
-#cascade.load(r'C:\Users\haksh\Documents\CSC420\PROJECT\face.xml')
 
 annotated_movie = {}
 
 print ('Opening output file')
 fourcc = cv2.VideoWriter_fourcc(*'MPEG')
-out = cv2.VideoWriter('output.mp4',fourcc, 20.0, (1280,720))
+out = cv2.VideoWriter(scene_name+'_output.mp4', fourcc, 20.0, (1920, 1040))
 
-#face = cv2.imread(r'C:\Users\haksh\Documents\CSC420\PROJECT\avengers.jpg')
-print ('Entering loop.')
+# Main Frame-By-Frame Analysis for Face Detection and Classification
+print ('Analyzing Frame-By-Frame...')
 for frame_count in range(len(video_frames)-1):
-    #print video_frames[frame_count].shape
-    #gray = cv2.cvtColor(video_frames[frame_count], cv2.COLOR_BGR2GRAY)
     rgb = cv2.cvtColor(video_frames[frame_count], cv2.COLOR_BGR2RGB)
-    #faces = cascade.detectMultiScale(gray, 1.2, 5)
     faces = face_recognition.face_locations(rgb)
 
     img = video_frames[frame_count]
+
+    # For each located face in the current frame...
     for face_location in faces:
-        print("\tLocated face on Frame " + str(frame_count))
+        if frame_count % 10 == 0:
+            print("\tOn Frame " + str(frame_count))
+
+        # Draw the border around the face
         top, right, bottom, left = face_location
-        img = cv2.rectangle(video_frames[frame_count], (left, top), (right, bottom), (255,0,0), 2)
+        img = cv2.rectangle(video_frames[frame_count], (left, top), (right, bottom), (255, 0, 0), 2)
         face = video_frames[frame_count][top:bottom, left:right]
 
+        # Classify the face
         cv2.imwrite('temp.jpg', face)
-
-        print("\tRunning Command")
         p = subprocess.Popen(['/Users/Bipen/anaconda3/bin/python classify.py temp.jpg'], stdout=subprocess.PIPE, shell=True)
         stdout, stderr = p.communicate()
         value = p.returncode
 
-        # p.wait()
-        #output= subprocess.check_output("grep 'hello' tmp", shell=True)
-        print("\tSTDOUT: ")
+        print("\tClassification Results: ")
         print("\t" + stdout)
 
         result = stdout.split("\n")[-2]
 
-        cv2.imshow("[Frame " + str(frame_count) + "] " + result, face)
-        cv2.waitKey(5000)
-        #print p.stdout.read()
-        # print("\tSTDERR: ")
-        # print(stderr)
-        # print("\tRETURN VALUE: ")
-        # print(value)
-        #output = p.stderr.read()
-        #print(output)
-
-        #print("return code: " + str(rc))
-        #print("output: " + str(output))
-        #print("------------------")
-        #name = os.system('python3.7 ./classify.py temp.jpg')
+        # Label according to the classification result
+        cv2.putText(img, result, (left, top-10), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, 255)
 
         os.remove('temp.jpg')
-        # print(name)
 
+    # Replace the frame in the video with our annotated frame
     annotated_movie[frame_count] = img
 
     out.write(img)
 
-
-#for image in cropped_faces:
- #   cv2.imshow('', image)
-  #  cv2.waitKey(1000)
-
 out.release()
-
-
-#ref_x, ref_y = map(list,zip(*kp_pairs.keys()))
-#test_x, test_y = map(list,zip(*kp_pairs.values()))
-#visualize_matches(frame1, frame2, ref_x, ref_y, test_x, test_y)
-
 
